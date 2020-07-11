@@ -1,0 +1,18 @@
+{
+ "name": "nwide",
+ "version": "1.0.0",
+ "description": "",
+ "main": "main.js",
+ "window": {
+	"icon": "icon.png"
+ },
+ "scripts": {
+  "start": "nw"
+ },
+ "dependencies": {
+  "nw": "^0.46.4"
+ },
+ "devDependencies": {},
+ "author": "",
+ "license": "ISC"
+}
