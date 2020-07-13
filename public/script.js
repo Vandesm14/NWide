@@ -1,4 +1,5 @@
 const fs = require('fs');
+const modelist = ace.require('ace/ext/modelist');
 
 let Sortable = require('sortablejs');
 
@@ -47,13 +48,19 @@ let ide = {
 	close: function (id) {
 		// TODO: Close on not saved popup (native)
 		let tab = this.getTab(id);
+		let focused = $('#tabs').find(`.tab[tab-id="${id}"]`).hasClass('active');
+		let index = $('#tabs').find(`.tab[tab-id="${id}"]`).index();
 		if (tab.changed && !confirm(`Discard changes for ${tab.name}`)) return; // Return if keep changes
 
 		$('#tabs').find(`.tab[tab-id="${id}"]`).remove();
-		this.tabs.splice(this.tabs.indexOf(id), 1);
-		if (tabs.length > 0) {
-			$('#tabs > .tab').last().click();
-		} else {
+		this.tabs.splice(this.tabs.indexOf(this.getTab(id)), 1);
+		if (focused && this.tabs.length > 0) {
+			if (index > this.tabs.length - 1) {
+				this.focus($('#tabs > .tab').eq(index - 1).attr('tab-id'));
+			} else {
+				this.focus($('#tabs > .tab').eq(index).attr('tab-id'));
+			}
+		} else if (this.tabs.length === 0) {
 			$('#editor').hide();
 		}
 	},
@@ -79,10 +86,12 @@ let ide = {
 		$('#tabs > .tab.active').removeClass('active');
 		$('#tabs').find(`.tab[tab-id="${id}"]`).addClass('active');
 		let tab = this.getActive();
-		editor.setValue(tab.content);
-		editor.focus();
-		editor.gotoLine(tab.pos.row + 1, tab.pos.column);
+
 		$('#editor').show();
+		editor.session.setMode(modelist.getModeForPath(tab.path).mode);
+		editor.setValue(tab.content);
+		editor.gotoLine(tab.pos.row + 1, tab.pos.column);
+		editor.focus();
 	},
 	listeners: function () {
 		new Sortable($('#tabs')[0], {
@@ -103,6 +112,10 @@ let ide = {
 };
 
 $(document).ready(function () {
+	$('#save').on('click', function () {
+		ide.save(ide.getActive().path);
+	});
+
 	$('#btn-min').on('click', function () {
 		win.minimize();
 	});
@@ -177,6 +190,10 @@ $(document).ready(function () {
 	editor.setTheme('ace/theme/tomorrow_night_bright');
 	editor.setFontSize('14px');
 	editor.session.setMode('ace/mode/text');
+
+	editor.on('change', function () {
+		ide.unsaved(ide.getActive().path);
+	});
 });
 
 function getFiles() {
