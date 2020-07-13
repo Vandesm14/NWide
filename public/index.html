@@ -6,24 +6,55 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>NWide</title>
 	<link href="https://fonts.googleapis.com/css2?family=Quicksand&display=swap" rel="stylesheet" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
 	<link href="style.css" rel="stylesheet" type="text/css" />
+	<link href="jstree.css" rel="stylesheet" type="text/css" />
 	<script src="script.js" defer></script>
 </head>
 
 <body>
 	<div class="app">
-		<div class="menu"></div>
-		<div class="row">
-			<div class="row">
-				<div class="files"></div>
-				<div class="ide">
-					<div class="tabs"></div>
-					<div class="editor"></div>
+		<div class="menu">
+			<img class="icon" src="../icon.png">
+			<div class="list">
+				<p class="list-name">File</p>
+				<div class="list-items">
+					<p class="item">Save</p>
+					<p class="item">Save As</p>
+					<p class="item">Open</p>
 				</div>
+			</div>
+			<div class="list">
+				<p class="list-name">Edit</p>
+				<div class="list-items">
+					<p class="item">Cut</p>
+					<p class="item">Copy</p>
+					<p class="item">Paste</p>
+				</div>
+			</div>
+			<div class="menu-drag"></div>
+			<div class="btns">
+				<div class="wrapper" id="btn-min">
+					<img src="assets/min.png">
+				</div>
+				<div class="wrapper" id="btn-resize">
+					<img src="assets/resize.png">
+				</div>
+				<div class="wrapper" id="btn-close">
+					<img src="assets/x.png">
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="files" id="jstree_demo_div"></div>
+			<div class="ide">
+				<div class="tabs"></div>
+				<div class="editor"></div>
 			</div>
 		</div>
 	</div>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
 </body>
 
 </html>

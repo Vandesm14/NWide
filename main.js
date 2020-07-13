@@ -3,6 +3,7 @@ let tray;
 
 let winOptions = {
 	icon: 'icon.png',
+	frame: false,
 	id: 'main'
 };
 
