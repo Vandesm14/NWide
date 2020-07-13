@@ -1,16 +1,16 @@
 .jstree-default .jstree-ocl {
-	margin-right: -4px;
-	margin-left: -6px
+  margin-right: -4px;
+  margin-left: -6px;
 }
 .jstree-default .jstree-closed > .jstree-ocl {
   background-image: url(assets/collapse.png);
   background-position: center center;
-	background-size: 80% !important;
+  background-size: 80% !important;
 }
 .jstree-default .jstree-open > .jstree-ocl {
   background-image: url(assets/expand.png);
   background-position: center center;
-	background-size: 80% !important;
+  background-size: 80% !important;
 }
 .jstree-default .jstree-icon {
   background-size: contain !important;
@@ -20,6 +20,9 @@
 	color: #ffffff99;
 } */
 
+.jstree-default .jstree-anchor {
+  width: 100%;
+}
 .jstree-default .jstree-hovered {
   background-color: #ffffff22;
 }

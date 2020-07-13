@@ -10,8 +10,8 @@
   "start": "nw"
  },
  "dependencies": {
-  "monaco-editor": "^0.20.0",
-  "nw": "^0.46.4"
+  "nw": "^0.46.4",
+  "sortablejs": "^1.10.2"
  },
  "devDependencies": {},
  "author": "",
