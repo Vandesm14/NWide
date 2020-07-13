@@ -1,5 +1,8 @@
-// const nw = require('nw.gui');
-let tray;
+// try {
+	// global.monaco = require('monaco-editor');
+// } catch (err) {
+// 	require('fs').writeFileSync('err.txt', err.message);
+// }
 
 let winOptions = {
 	icon: 'icon.png',
