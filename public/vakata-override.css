@@ -1,0 +1,11 @@
+#vakata-dnd {
+	background-color: var(--primary-color);
+}
+
+#vakata-dnd .jstree-icon {
+	display: none !important;
+}
+
+.vakata-context-separator {
+	border-top: 2px solid var(--background-color);
+}

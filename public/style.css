@@ -7,9 +7,6 @@
   --focus-text: white;
   --hover-color: #373a41;
   --menu-color: #2f3136;
-
-/* --primary-color: #181c25; */
-  /* --secondary-color: #0e1116; */
   --primary-color: #29313d;
   --secondary-color: #181c22;
 }
@@ -43,7 +40,8 @@ body {
   overflow: hidden;
   background-color: var(--background-color);
   color: white;
-  /* font-family: 'Quicksand', sans-serif; */
+
+/* font-family: 'Quicksand', sans-serif; */
   font-family: Calibri;
 }
 
@@ -96,13 +94,6 @@ a, a:visited {
   background-color: var(--primary-color);
 }
 
-.menu > .menu-drag {
-  flex: 1;
-  text-align: center;
-
-  -webkit-app-region: drag;
-}
-
 .menu > .list > .list-name {
   display: flex;
   align-items: center;
@@ -125,7 +116,7 @@ a, a:visited {
   padding-top: 0;
   border-radius: 2px;
   background-color: var(--secondary-color);
-  box-shadow: 0 2px 4px 2px #000000bf;
+  box-shadow: 0 2px 4px 0 #000000bf;
   color: white;
 }
 .menu > .list:hover > .list-items {
@@ -137,6 +128,15 @@ a, a:visited {
 }
 .menu > .list > .list-items > .item:hover {
   background-color: var(--hover-color);
+}
+
+.menu > .menu-drag {
+  align-self: center;
+  flex: 1;
+  color: var(--blur-text);
+  text-align: center;
+
+  -webkit-app-region: drag;
 }
 
 .menu > .btns {
@@ -171,11 +171,12 @@ a, a:visited {
 .row > .files {
   overflow: auto;
   margin-top: 4vh;
-  border-top: 3vh solid var(--primary-color);
   padding: 10px;
   padding-right: 20px;
-  /* border-radius: 5px; */
+  padding-left: 0;
+/* border-radius: 5px; */
   min-width: 10%;
+  border-top: 3vh solid var(--primary-color);
   background-color: var(--secondary-color);
 }
 
@@ -233,8 +234,8 @@ a, a:visited {
   margin: auto;
   margin-right: -14px;
   margin-left: 10px;
-  width: 20px;
-  height: 20px;
+  width: 14px;
+  height: 14px;
   cursor: pointer;
 }
 
@@ -245,7 +246,7 @@ a, a:visited {
   height: 100%;
 }
 #editor {
-	display: none;
+  display: none;
 }
 
 /* #editor { 

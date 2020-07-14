@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const modelist = ace.require('ace/ext/modelist');
 
 let Sortable = require('sortablejs');
@@ -7,10 +8,15 @@ let editor;
 const win = nw.Window.get();
 
 const dirname = '.';
+const rootDir = path.resolve().split(path.sep)[path.resolve().split(path.sep).length - 1];
 
 let settings = {
 	filesystem: {
 		ignore: ['node_modules', '.git']
+	},
+	editor: {
+		indentSize: 2,
+		indentWithTabs: true
 	}
 };
 let ide = {
@@ -21,14 +27,28 @@ let ide = {
 	getTab: function (id) {
 		return this.tabs.find(el => el.id === id);
 	},
+	getFromPath: function (path) {
+		return this.tabs.find(el => el.path === path);
+	},
 	isOpen: function (path) {
 		return !!this.tabs.find(el => el.path === path);
 	},
-	open: function (path) {
+	refresh: function (id, node) {
+		if (node) {
+			if (this.getTab(id)) {
+				this.getTab(id).path = pathFromNode(node);
+				$('#tabs').find(`.tab[tab-id="${id}"] > .name`).text(this.getTab(id) ? this.getTab(id).name : '');
+				editor.session.setMode(modelist.getModeForPath(node.node.text).mode);
+			}
+		} else {
+			this.close(id);
+		}
+	},
+	open: function (path, node) {
 		if (!this.isOpen(path) && fs.statSync(path).isFile()) { // If not already open
-			let id = ((+new Date()) * Math.round(Math.random() * Math.pow(10, 10))).toString(36);
+			let id = node.node.id;
 			let content = fs.readFileSync(path).toString();
-			let name = path.split('/')[path.split('/').length - 1];
+			let name = node.node.text;
 			this.tabs.push({
 				path,
 				id,
@@ -37,12 +57,16 @@ let ide = {
 					column: 0
 				},
 				name,
+				node,
 				content,
 				changed: false
 			});
 			$('#tabs').append(`<div class="tab" tab-id="${id}"><p class="name">${name}</p><img src="assets/x.png"></div>`);
 			this.listeners();
 			this.focus(id);
+			this.tabs[this.tabs.length - 1].changed = false;
+		} else if (this.isOpen(path)) {
+			ide.focus(this.getFromPath(path).id);
 		}
 	},
 	close: function (id) {
@@ -62,6 +86,7 @@ let ide = {
 			}
 		} else if (this.tabs.length === 0) {
 			$('#editor').hide();
+			$('#title').text(`${rootDir} - NWide`);
 		}
 	},
 	save: function (path) {
@@ -72,14 +97,19 @@ let ide = {
 				alert('There was an error saving the file.');
 			} else {
 				$('#tabs').find(`.tab[tab-id="${tab.id}"]`).removeClass('save');
+				$('#tabs').find(`.tab[tab-id="${tab.id}"] > img`).attr('src', 'assets/x.png');
 				tab.changed = false;
 			}
 		});
 	},
 	unsaved: function (path) {
 		let tab = this.tabs.find(tab => tab.path === path);
-		$('#tabs').find(`.tab[tab-id="${tab.id}"]`).addClass('save');
-		tab.changed = true;
+		if (tab.content !== editor.getValue()) {
+			$('#tabs').find(`.tab[tab-id="${tab.id}"]`).addClass('save');
+			$('#tabs').find(`.tab[tab-id="${tab.id}"] > img`).attr('src', 'assets/circle.png');
+			tab.content = editor.getValue();
+			tab.changed = true;
+		}
 	},
 	focus: function (id) {
 		if (this.getActive()) this.getActive().pos = editor.getCursorPosition();
@@ -87,6 +117,7 @@ let ide = {
 		$('#tabs').find(`.tab[tab-id="${id}"]`).addClass('active');
 		let tab = this.getActive();
 
+		$('#title').text(`${tab.name} - ${rootDir} - NWide`);
 		$('#editor').show();
 		editor.session.setMode(modelist.getModeForPath(tab.path).mode);
 		editor.setValue(tab.content);
@@ -112,6 +143,8 @@ let ide = {
 };
 
 $(document).ready(function () {
+	$('#title').text(`${rootDir} - NWide`);
+
 	$('#save').on('click', function () {
 		ide.save(ide.getActive().path);
 	});
@@ -151,11 +184,18 @@ $(document).ready(function () {
 			}
 		},
 		core: {
-			check_callback: true,
-			data: getFiles(),
-			themes: {
-				// 'stripes': true
+			check_callback: function (operation, node, node_parent, node_position, more) {
+				if (operation === 'delete_node') {
+					if (!confirm(`Are you sure you sure you want to delete "${node.text}"?`)) {
+						return false;
+					}
+				}
+				return true;
 			},
+			data: getFiles(),
+		},
+		contextmenu: {
+			show_at_node: false,
 		},
 		plugins: [
 			'contextmenu', 'dnd', 'types', 'unique', 'changed', 'sort'
@@ -172,26 +212,35 @@ $(document).ready(function () {
 	});
 
 	$('#files').on('activate_node.jstree', function (e, node) {
-		let path = node.node.parents.filter(el => el !== '#');
-		let jstree = $('#files').jstree(true);
-		path = path.map(el => jstree.get_node(el).text);
-		path.reverse().push(node.node.text);
-		ide.open(path.join('/'));
+		ide.open(pathFromNode(node), node);
 	});
-
-	// $('.jstree-default').focusin(function(){
-	// 	$(this).css('color', '#ffffff');
-	// });
-	// $('.jstree-default').focusout(function(){
-	// 	$(this).css('color', '#ffffff99');
-	// });
+	$('#files').on('delete_node.jstree', function (e, node) {
+		let path = pathFromNode(node).split('/');
+		ide.refresh(node.node.id);
+		fs.unlinkSync(path);
+	});
+	$('#files').on('rename_node.jstree', function (e, node) {
+		let path = pathFromNode(node).split('/');
+		path.pop();
+		let old = [...path, node.old].join('/');
+		let text = [...path, node.text].join('/');
+		fs.renameSync(old, text);
+		if (ide.isOpen(old)) {
+			ide.getFromPath(old).name = node.text;
+			ide.refresh(node.node.id, node);
+		}
+	});
 
 	editor = ace.edit('editor');
 	editor.setTheme('ace/theme/tomorrow_night_bright');
 	editor.setFontSize('14px');
-	editor.session.setMode('ace/mode/text');
+	editor.session.setOptions({
+		mode: 'ace/mode/text',
+		tabSize: settings.editor.indentSize,
+		useSoftTabs: settings.editor.indentWithTabs
+	});
 
-	editor.on('change', function () {
+	$('#editor').on('keyup', function () {
 		ide.unsaved(ide.getActive().path);
 	});
 });
@@ -219,6 +268,13 @@ function getFiles() {
 		return names;
 	}
 	let ret = dir(pwd.join('/'));
-	console.log(ret);
 	return ret;
+}
+
+function pathFromNode(node) {
+	let path = node.node.parents.filter(el => el !== '#');
+	let jstree = $('#files').jstree(true);
+	path = path.map(el => jstree.get_node(el).text);
+	path.reverse().push(node.node.text);
+	return path.join('/');
 }

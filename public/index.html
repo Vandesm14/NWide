@@ -6,9 +6,16 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>NWide</title>
 	<link href="https://fonts.googleapis.com/css2?family=Quicksand&display=swap" rel="stylesheet" />
-	<link rel="stylesheet" href="jstree.min.css" />
 	<link href="style.css" rel="stylesheet" type="text/css" />
 	<link href="jstree.css" rel="stylesheet" type="text/css" />
+	<link href="vakata-override.css" rel="stylesheet" type="text/css" />
+
+	<script src="jquery.min.js"></script>
+	<script src="jstree.js"></script>
+	<script src="ace/ace.js"></script>
+	<script src="ace/ext-modelist.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/keypress/2.1.5/keypress.min.js"></script>
+	<script src="script.js"></script>
 </head>
 
 <body>
@@ -31,7 +38,7 @@
 					<p class="item">Paste</p>
 				</div>
 			</div>
-			<div class="menu-drag"></div>
+			<div class="menu-drag" id="title"></div>
 			<div class="btns">
 				<div class="wrapper" id="btn-min">
 					<img src="assets/min.png">
@@ -52,12 +59,6 @@
 			</div>
 		</div>
 	</div>
-
-	<script src="jquery.min.js"></script>
-	<script src="jstree.min.js"></script>
-	<script src="ace/ace.js"></script>
-	<script src="ace/ext-modelist.js"></script>
-	<script src="script.js"></script>
 </body>
 
 </html>
