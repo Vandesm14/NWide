@@ -34,21 +34,23 @@ let ide = {
 		return !!this.tabs.find(el => el.path === path);
 	},
 	refresh: function (id, node) {
+    if (node.node) node = node.node;
 		if (node) {
 			if (this.getTab(id)) {
 				this.getTab(id).path = pathFromNode(node);
 				$('#tabs').find(`.tab[tab-id="${id}"] > .name`).text(this.getTab(id) ? this.getTab(id).name : '');
-				editor.session.setMode(modelist.getModeForPath(node.node.text).mode);
+				editor.session.setMode(modelist.getModeForPath(node.text).mode);
 			}
 		} else {
 			this.close(id);
 		}
 	},
 	open: function (path, node) {
+  if (node.node) node = node.node;
 		if (!this.isOpen(path) && fs.statSync(path).isFile()) { // If not already open
-			let id = node.node.id;
+			let id = node.id;
 			let content = fs.readFileSync(path).toString();
-			let name = node.node.text;
+			let name = node.text;
 			this.tabs.push({
 				path,
 				id,
@@ -108,7 +110,7 @@ let ide = {
 			$('#tabs').find(`.tab[tab-id="${tab.id}"]`).addClass('save');
 			$('#tabs').find(`.tab[tab-id="${tab.id}"] > img`).attr('src', 'assets/circle.png');
 			tab.content = editor.getValue();
-			tab.changed = true;
+		  tab.changed = true;
 		}
 	},
 	focus: function (id) {
@@ -157,6 +159,28 @@ $(document).ready(function () {
 	});
 	$('#btn-close').on('click', function () {
 		win.close();
+	});
+	
+	$('#new-file').on('click', function () {
+	  let parent = $('#files .jstree-clicked').closest('.jstree-node').attr('id');
+	  let name = prompt('Enter a filename');
+	  if (name) {
+  		let id = $('#files').jstree(true).create_node(parent || '#', {text: name, type: 'file'}, 'last', function(){
+    		console.log($('#files').jstree(true).get_node(id), {parent, name, id});
+    		let path = pathFromNode($('#files').jstree(true).get_node(id));
+    		fs.writeFileSync(path, '');
+    		ide.open(path, $('#files').jstree(true).get_node(id));
+  		});
+	  }
+	});
+	$('#new-folder').on('click', function () {
+	  let parent = $('#files .jstree-clicked').closest('.jstree-node').attr('id');
+	  let name = prompt('Enter a folder name');
+	  if (name) {
+  		let id = $('#files').jstree(true).create_node(parent || '#', {text: name});
+  		let path = pathFromNode($('#files').jstree(true).get_node(id));
+  		fs.mkdirSync(path);
+	  }
 	});
 
 	$('#files').jstree({
@@ -215,8 +239,8 @@ $(document).ready(function () {
 		ide.open(pathFromNode(node), node);
 	});
 	$('#files').on('delete_node.jstree', function (e, node) {
-		let path = pathFromNode(node).split('/');
-		ide.refresh(node.node.id);
+		let path = pathFromNode(node);
+		ide.close(node.node.id);
 		fs.unlinkSync(path);
 	});
 	$('#files').on('rename_node.jstree', function (e, node) {
@@ -272,9 +296,11 @@ function getFiles() {
 }
 
 function pathFromNode(node) {
-	let path = node.node.parents.filter(el => el !== '#');
+  console.log(node);
+  if (node.node) node = node.node;
+	let path = node.parents.filter(el => el !== '#');
 	let jstree = $('#files').jstree(true);
 	path = path.map(el => jstree.get_node(el).text);
-	path.reverse().push(node.node.text);
+	path.reverse().push(node.text);
 	return path.join('/');
 }
