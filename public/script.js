@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const rimraf = require('rimraf');
 const modelist = ace.require('ace/ext/modelist');
 
 let Sortable = require('sortablejs');
@@ -162,24 +163,32 @@ $(document).ready(function () {
 	});
 	
 	$('#new-file').on('click', function () {
-	  let parent = $('#files .jstree-clicked').closest('.jstree-node').attr('id');
-	  let name = prompt('Enter a filename');
+		let parent = $('#files .jstree-clicked').attr('id');
+		if ($('#files').jstree(true).get_node(parent).type === 'file') {
+			parent = $('#files').jstree(true).get_node(parent).parent;
+		}
+		let name = prompt('Enter a filename');
 	  if (name) {
-  		let id = $('#files').jstree(true).create_node(parent || '#', {text: name, type: 'file'}, 'last', function(){
-    		console.log($('#files').jstree(true).get_node(id), {parent, name, id});
-    		let path = pathFromNode($('#files').jstree(true).get_node(id));
-    		fs.writeFileSync(path, '');
-    		ide.open(path, $('#files').jstree(true).get_node(id));
-  		});
+			let id = $('#files').jstree(true).create_node(parent || '#', {text: name, type: 'file'});
+			let path = pathFromNode($('#files').jstree(true).get_node(id));
+			fs.writeFileSync(path, '');
+			ide.open(path, $('#files').jstree(true).get_node(id));
 	  }
 	});
 	$('#new-folder').on('click', function () {
-	  let parent = $('#files .jstree-clicked').closest('.jstree-node').attr('id');
+		let parent = $('#files .jstree-clicked').attr('id');
+		if ($('#files').jstree(true).get_node(parent).type === 'file') {
+			parent = $('#files').jstree(true).get_node(parent).parent;
+		}
 	  let name = prompt('Enter a folder name');
 	  if (name) {
   		let id = $('#files').jstree(true).create_node(parent || '#', {text: name});
   		let path = pathFromNode($('#files').jstree(true).get_node(id));
-  		fs.mkdirSync(path);
+			fs.mkdirSync(path);
+			// FIXME: Callback doesn't execute, node does not open
+			$('#files').jstree(true).open_node(parent, function () {
+				console.log('Node opened');
+			});
 	  }
 	});
 
@@ -218,12 +227,10 @@ $(document).ready(function () {
 			},
 			data: getFiles(),
 		},
+		plugins: ['contextmenu', 'dnd', 'types', 'unique', 'sort', 'conditionalselect'],
 		contextmenu: {
 			show_at_node: false,
 		},
-		plugins: [
-			'contextmenu', 'dnd', 'types', 'unique', 'changed', 'sort'
-		],
 		types: {
 			'default': {
 				icon: 'assets/folder.png'
@@ -232,6 +239,9 @@ $(document).ready(function () {
 				icon: 'assets/file.png',
 				valid_children: []
 			}
+		},
+		conditionalselect: function(node, event){
+			return event.which === 1;
 		}
 	});
 
@@ -240,8 +250,12 @@ $(document).ready(function () {
 	});
 	$('#files').on('delete_node.jstree', function (e, node) {
 		let path = pathFromNode(node);
-		ide.close(node.node.id);
-		fs.unlinkSync(path);
+		if (node.node.type === 'file') {
+			if (ide.isOpen(path)) ide.close(node.node.id);
+			fs.unlinkSync(path);
+		} else {
+			rimraf.sync(path);
+		}
 	});
 	$('#files').on('rename_node.jstree', function (e, node) {
 		let path = pathFromNode(node).split('/');
@@ -296,7 +310,6 @@ function getFiles() {
 }
 
 function pathFromNode(node) {
-  console.log(node);
   if (node.node) node = node.node;
 	let path = node.parents.filter(el => el !== '#');
 	let jstree = $('#files').jstree(true);
